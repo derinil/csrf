@@ -64,14 +64,14 @@ func InjectCSRF(csrfHandler Handler, cookieFunc CookieFunc) func(http.Handler) h
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			var cookie string
 
-			if c, err := r.Cookie(CookieName); err != nil || c == nil {
+			if c, err := r.Cookie(CookieName); err == nil || c != nil {
 				cookie = c.Value
 
-				if ok, err := csrfHandler.ValidateCookie(cookie); err != nil || !ok{
+				if ok, err := csrfHandler.ValidateCookie(cookie); err != nil || !ok {
 					cookie = ""
 				}
 			}
-			
+
 			if cookie == "" {
 				cookie, err := csrfHandler.CreateCookie()
 				if err != nil {
@@ -81,7 +81,7 @@ func InjectCSRF(csrfHandler Handler, cookieFunc CookieFunc) func(http.Handler) h
 
 				http.SetCookie(w, cookieFunc(cookie))
 			}
-			
+
 			token, err := csrfHandler.CreateToken(cookie)
 			if err != nil {
 				h.ServeHTTP(w, r)
